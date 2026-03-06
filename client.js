@@ -11,6 +11,10 @@ if (isNaN(year)) {
 const channelName = `photo-hunt-${year}-challenges`;
 const channel = await findChannel(channelName);
 
+export function getYear() {
+  return year;
+}
+
 export async function send(message, thread = undefined) {
   const result = await client.chat.postMessage({
     channel: channel.id,
@@ -19,6 +23,22 @@ export async function send(message, thread = undefined) {
   });
 
   return result.ts;
+}
+
+export async function fetchMessages() {
+  const result = await client.conversations.history({
+    channel: channel.id,
+    limit: 1000,
+  });
+  return result.messages;
+}
+
+export async function fetchThread(thread) {
+  const result = await client.conversations.replies({
+    channel: channel.id,
+    ts: thread,
+  });
+  return result.messages;
 }
 
 async function findChannel(name) {

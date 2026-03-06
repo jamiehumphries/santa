@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "archive": "node archive.js",
     "intro": "node index.js --intro",
     "start": "node index.js"
   },
