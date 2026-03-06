@@ -1,0 +1,20 @@
+{
+  "name": "santa",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "prettier": {
+    "plugins": [
+      "prettier-plugin-packagejson",
+      "prettier-plugin-organize-imports"
+    ]
+  },
+  "devDependencies": {
+    "prettier": "3.8.1",
+    "prettier-plugin-organize-imports": "4.3.0",
+    "prettier-plugin-packagejson": "3.0.2"
+  }
+}
