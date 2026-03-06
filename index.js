@@ -6,10 +6,17 @@ import numberToWords from "number-to-words";
 const { toWords } = numberToWords;
 
 const args = process.argv.slice(2);
-const { SLACK_TOKEN, CHANNEL_NAME, TEAMS_SPREADSHEET } = process.env;
+const { SLACK_TOKEN, TEAMS_SPREADSHEET } = process.env;
+
+const year = parseInt(args[args.length - 1]);
+if (isNaN(year)) {
+  throw new Error("No year provided in final argument.");
+}
 
 const client = new WebClient(SLACK_TOKEN);
-const channel = await findChannel(CHANNEL_NAME);
+
+const channelName = `photo-hunt-${year}-challenges`;
+const channel = await findChannel(channelName);
 
 let challengeNumber = 1;
 
