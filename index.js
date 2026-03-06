@@ -1,39 +1,21 @@
-import { WebClient } from "@slack/web-api";
 import "dotenv/config";
 import { readFile } from "fs/promises";
 import numberToWords from "number-to-words";
+import { send } from "./client.js";
+import {
+  introMessage,
+  submissionsThreadMessage,
+  votingThreadMessage,
+} from "./messages.js";
 
 const { toWords } = numberToWords;
 
-const args = process.argv.slice(2);
-const { SLACK_TOKEN, TEAMS_SPREADSHEET } = process.env;
-
-const year = parseInt(args[args.length - 1]);
-if (isNaN(year)) {
-  throw new Error("No year provided in final argument.");
-}
-
-const client = new WebClient(SLACK_TOKEN);
-
-const channelName = `photo-hunt-${year}-challenges`;
-const channel = await findChannel(channelName);
-
 let challengeNumber = 1;
-
-const submissionsThreadMessage =
-  "*🧵 Submissions 📸*\n" +
-  `Remember to include your <${TEAMS_SPREADSHEET}|team number> in your submission post.`;
-
-const votingThreadMessage =
-  "*🏆 Voting 🗳️*\n\n" +
-  "This challenge has extra points for the best submission.\n" +
-  "React with ➕ to vote for your favourite(s).\n" +
-  "You cannot vote for your own team’s submission.";
 
 async function run() {
   const challenges = await parseChallenges();
 
-  if (args.includes("--intro")) {
+  if (process.argv.includes("--intro")) {
     await sendIntroMessage(challenges);
     return;
   }
@@ -96,10 +78,9 @@ async function sendIntroMessage(challenges) {
   const numberOfChallenges = challenges.flatMap(
     (section) => section.challenges,
   ).length;
-  const message =
-    "*=== 📸 CHALLENGES 📸 ===*\n\n" +
-    `There are *${numberOfChallenges}* challenges across ${toWords(numberOfSections)} themes.\n\n` +
-    "Submit photos or videos for as many as you can before 4:30pm.";
+  const message = introMessage
+    .replace("[[themes]]", toWords(numberOfSections))
+    .replace("[[challenges]]", numberOfChallenges);
   return await send(message);
 }
 
@@ -141,37 +122,6 @@ async function startChallengeThread(challenge, thread) {
   if (challenge.hasWinner) {
     await send(votingThreadMessage, thread);
   }
-}
-
-async function send(message, thread = undefined) {
-  const result = await client.chat.postMessage({
-    channel: channel.id,
-    text: message,
-    thread_ts: thread,
-  });
-
-  return result.ts;
-}
-
-async function findChannel(name) {
-  let nextCursor = undefined;
-
-  do {
-    const result = await client.conversations.list({
-      limit: 1000,
-      cursor: nextCursor,
-      types: "public_channel,private_channel",
-    });
-
-    const match = result.channels.find((channel) => channel.name === name);
-    if (match) {
-      return match;
-    }
-
-    nextCursor = result.response_metadata.next_cursor;
-  } while (nextCursor);
-
-  throw new Error(`Could not find channel named '${name}'.`);
 }
 
 await run();
