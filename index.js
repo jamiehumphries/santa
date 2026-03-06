@@ -1,7 +1,11 @@
 import { WebClient } from "@slack/web-api";
 import "dotenv/config";
 import { readFile } from "fs/promises";
+import numberToWords from "number-to-words";
 
+const { toWords } = numberToWords;
+
+const args = process.argv.slice(2);
 const { SLACK_TOKEN, CHANNEL_NAME, TEAMS_SPREADSHEET } = process.env;
 
 const client = new WebClient(SLACK_TOKEN);
@@ -21,6 +25,12 @@ const votingThreadMessage =
 
 async function run() {
   const challenges = await parseChallenges();
+
+  if (args.includes("--intro")) {
+    await sendIntroMessage(challenges);
+    return;
+  }
+
   for (const section of challenges) {
     await sendSectionHeader(section);
     for (const challenge of section.challenges) {
@@ -72,6 +82,18 @@ function parseChallenge(parts) {
     maxPoints: parseInt(maxPoints),
     hasWinner: maxPoints && !perText,
   };
+}
+
+async function sendIntroMessage(challenges) {
+  const numberOfSections = challenges.length;
+  const numberOfChallenges = challenges.flatMap(
+    (section) => section.challenges,
+  ).length;
+  const message =
+    "*=== 📸 CHALLENGES 📸 ===*\n\n" +
+    `There are *${numberOfChallenges}* challenges across ${toWords(numberOfSections)} themes.\n\n` +
+    "Submit photos or videos for as many as you can before 4:30pm.";
+  return await send(message);
 }
 
 async function sendSectionHeader(section) {
