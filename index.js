@@ -2,11 +2,26 @@ import { WebClient } from "@slack/web-api";
 import "dotenv/config";
 
 const token = process.env.SLACK_TOKEN;
-const channelName = process.env.CHANNEL_NAME;
 
 const client = new WebClient(token);
+const channel = await findChannel(process.env.CHANNEL_NAME);
 
-async function findConversation(name) {
+async function run() {
+  const thread = await send("Ho, Ho, Ho, World!");
+  await send("How are you?", thread);
+}
+
+async function send(message, thread = undefined) {
+  const result = await client.chat.postMessage({
+    channel: channel.id,
+    text: message,
+    thread_ts: thread,
+  });
+
+  return result.ts;
+}
+
+async function findChannel(name) {
   let nextCursor = undefined;
 
   do {
@@ -27,5 +42,4 @@ async function findConversation(name) {
   throw new Error(`Could not find channel named '${name}'.`);
 }
 
-const channel = await findConversation(channelName);
-console.log(channel);
+await run();
