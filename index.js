@@ -33,7 +33,7 @@ async function parseChallenges() {
   const file = await readFile("./challenges.txt");
   const lines = file
     .toString()
-    .split("\n")
+    .split(/\r?\n/g)
     .filter((line) => line !== "");
 
   const sections = [];
